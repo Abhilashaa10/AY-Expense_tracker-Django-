@@ -1,22 +1,19 @@
-# handles req and responses
-from django.shortcuts import render , redirect
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 from .models import Expense
-from .forms import ExpenseForm
+from .serializers import ExpenseSerializer
 
+@api_view(['GET', 'POST'])
 def expense_list(request):
-    expenses = Expense.objects.all().order_by('-date')
-    total = sum(e.amount for e in expenses)
-    return render(request, 'expenses_app/expense_list.html', {
-        'expenses': expenses,
-        'total': total,
-    })
-    
-def add_expense(request):
-    if request.method == 'POST':
-        form = ExpenseForm(request.POST)
-        if form.is_valid():
-            form.save()
-            return redirect('expense_list')
-    else:
-        form = ExpenseForm()
-    return render(request, 'expenses_app/add_expense.html', {'form': form})
+    if request.method == 'GET':
+        expenses = Expense.objects.all().order_by('-date')
+        serializer = ExpenseSerializer(expenses, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = ExpenseSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
