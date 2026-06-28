@@ -39,6 +39,17 @@ function App() {
       .catch(error => console.error('Error adding expense:', error))
   }
 
+  const handleDelete = (id) => {
+  fetch(`http://127.0.0.1:8000/api/expenses/${id}/`, {
+    method: 'DELETE',
+  })
+    .then(() => {
+      fetchExpenses()
+    })
+    .catch(error => console.error('Error deleting expense:', error))
+}
+
+
   return (
     <div>
       <h1>Expense Tracker</h1>
@@ -80,6 +91,16 @@ function App() {
         />
         <button type="submit">Add Expense</button>
       </form>
+
+
+<ul>
+  {expenses.map(expense => (
+    <li key={expense.id}>
+      {expense.title} — ${expense.amount} ({expense.category})
+      <button onClick={() => handleDelete(expense.id)}>Delete</button>
+    </li>
+  ))}
+</ul>
 
       <ul>
         {expenses.map(expense => (
