@@ -9,8 +9,15 @@ function App() {
   const [note, setNote] = useState('')
   const [editingId, setEditingId] = useState(null)
 
+  const [filterCategory, setFilterCategory] = useState('')
+  const [filterDate, setFilterDate] = useState('')
+
   const fetchExpenses = () => {
-    fetch('http://127.0.0.1:8000/api/expenses/')
+    const params = new URLSearchParams()
+    if (filterCategory) params.append('category', filterCategory)
+    if (filterDate) params.append('date', filterDate)
+
+    fetch(`http://127.0.0.1:8000/api/expenses/?${params.toString()}`)
       .then(response => response.json())
       .then(data => setExpenses(data))
       .catch(error => console.error('Error fetching expenses:', error))
@@ -18,7 +25,7 @@ function App() {
 
   useEffect(() => {
     fetchExpenses()
-  }, [])
+  }, [filterCategory, filterDate])
 
   const resetForm = () => {
     setTitle('')
@@ -34,7 +41,6 @@ function App() {
     const expenseData = { title, amount, category, date, note }
 
     if (editingId) {
-      // UPDATE existing expense
       fetch(`http://127.0.0.1:8000/api/expenses/${editingId}/`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -47,7 +53,6 @@ function App() {
         })
         .catch(error => console.error('Error updating expense:', error))
     } else {
-      // CREATE new expense
       fetch('http://127.0.0.1:8000/api/expenses/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -81,25 +86,18 @@ function App() {
     setNote(expense.note)
   }
 
+  const clearFilters = () => {
+    setFilterCategory('')
+    setFilterDate('')
+  }
+
   return (
     <div>
       <h1>Expense Tracker</h1>
 
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-        <input
-          type="number"
-          placeholder="Amount"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          required
-        />
+        <input type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />
+        <input type="number" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} required />
         <select value={category} onChange={(e) => setCategory(e.target.value)}>
           <option value="food">Food</option>
           <option value="transport">Transport</option>
@@ -108,23 +106,26 @@ function App() {
           <option value="entertainment">Entertainment</option>
           <option value="other">Other</option>
         </select>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Note"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+        <input type="text" placeholder="Note" value={note} onChange={(e) => setNote(e.target.value)} />
         <button type="submit">{editingId ? 'Update Expense' : 'Add Expense'}</button>
-        {editingId && (
-          <button type="button" onClick={resetForm}>Cancel</button>
-        )}
+        {editingId && <button type="button" onClick={resetForm}>Cancel</button>}
       </form>
+
+      <hr />
+
+      <h3>Filter</h3>
+      <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)}>
+        <option value="">All Categories</option>
+        <option value="food">Food</option>
+        <option value="transport">Transport</option>
+        <option value="rent">Rent</option>
+        <option value="utilities">Utilities</option>
+        <option value="entertainment">Entertainment</option>
+        <option value="other">Other</option>
+      </select>
+      <input type="date" value={filterDate} onChange={(e) => setFilterDate(e.target.value)} />
+      <button type="button" onClick={clearFilters}>Clear Filters</button>
 
       <ul>
         {expenses.map(expense => (
