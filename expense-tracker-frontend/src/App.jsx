@@ -7,6 +7,7 @@ function App() {
   const [category, setCategory] = useState('food')
   const [date, setDate] = useState('')
   const [note, setNote] = useState('')
+  const [editingId, setEditingId] = useState(null)
 
   const fetchExpenses = () => {
     fetch('http://127.0.0.1:8000/api/expenses/')
@@ -19,36 +20,66 @@ function App() {
     fetchExpenses()
   }, [])
 
+  const resetForm = () => {
+    setTitle('')
+    setAmount('')
+    setCategory('food')
+    setDate('')
+    setNote('')
+    setEditingId(null)
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
+    const expenseData = { title, amount, category, date, note }
 
-    fetch('http://127.0.0.1:8000/api/expenses/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, amount, category, date, note }),
-    })
-      .then(response => response.json())
-      .then(() => {
-        fetchExpenses()
-        setTitle('')
-        setAmount('')
-        setCategory('food')
-        setDate('')
-        setNote('')
+    if (editingId) {
+      // UPDATE existing expense
+      fetch(`http://127.0.0.1:8000/api/expenses/${editingId}/`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(expenseData),
       })
-      .catch(error => console.error('Error adding expense:', error))
+        .then(response => response.json())
+        .then(() => {
+          fetchExpenses()
+          resetForm()
+        })
+        .catch(error => console.error('Error updating expense:', error))
+    } else {
+      // CREATE new expense
+      fetch('http://127.0.0.1:8000/api/expenses/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(expenseData),
+      })
+        .then(response => response.json())
+        .then(() => {
+          fetchExpenses()
+          resetForm()
+        })
+        .catch(error => console.error('Error adding expense:', error))
+    }
   }
 
   const handleDelete = (id) => {
-  fetch(`http://127.0.0.1:8000/api/expenses/${id}/`, {
-    method: 'DELETE',
-  })
-    .then(() => {
-      fetchExpenses()
+    fetch(`http://127.0.0.1:8000/api/expenses/${id}/`, {
+      method: 'DELETE',
     })
-    .catch(error => console.error('Error deleting expense:', error))
-}
+      .then(() => {
+        fetchExpenses()
+      })
+      .catch(error => console.error('Error deleting expense:', error))
+  }
 
+  const handleEditClick = (expense) => {
+    setEditingId(expense.id)
+    setTitle(expense.title)
+    setAmount(expense.amount)
+    setCategory(expense.category)
+    setDate(expense.date)
+    setNote(expense.note)
+  }
 
   return (
     <div>
@@ -89,23 +120,18 @@ function App() {
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
-        <button type="submit">Add Expense</button>
+        <button type="submit">{editingId ? 'Update Expense' : 'Add Expense'}</button>
+        {editingId && (
+          <button type="button" onClick={resetForm}>Cancel</button>
+        )}
       </form>
-
-
-<ul>
-  {expenses.map(expense => (
-    <li key={expense.id}>
-      {expense.title} — ${expense.amount} ({expense.category})
-      <button onClick={() => handleDelete(expense.id)}>Delete</button>
-    </li>
-  ))}
-</ul>
 
       <ul>
         {expenses.map(expense => (
           <li key={expense.id}>
             {expense.title} — ${expense.amount} ({expense.category})
+            <button onClick={() => handleEditClick(expense)}>Edit</button>
+            <button onClick={() => handleDelete(expense.id)}>Delete</button>
           </li>
         ))}
       </ul>
