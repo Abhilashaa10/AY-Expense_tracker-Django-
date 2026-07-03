@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Expense Tracker</title>
+</head>
+<body>
+    <h1>My Expenses</h1>
+    <p><a href="{% url 'add_expense' %}">+ Add New Expense</a></p>
+
+    <p><strong>Total spent: ${{ total }}</strong></p>
+
+    <table border="1" cellpadding="5">
+        <tr>
+            <th>Title</th>
+            <th>Amount</th>
+            <th>Category</th>
+            <th>Date</th>
+            <th>Note</th>
+        </tr>
+        {% for expense in expenses %}
+        <tr>
+            <td>{{ expense.title }}</td>
+            <td>${{ expense.amount }}</td>
+            <td>{{ expense.get_category_display }}</td>
+            <td>{{ expense.date }}</td>
+            <td>{{ expense.note }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
