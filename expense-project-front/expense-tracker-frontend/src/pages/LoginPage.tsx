@@ -92,7 +92,7 @@ const LoginPage = () => {
             )}
 
             <Button type="submit" className="w-full" size="lg">
-              Sign In
+              Login
             </Button>
           </form>
 

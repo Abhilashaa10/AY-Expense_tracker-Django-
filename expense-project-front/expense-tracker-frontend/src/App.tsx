@@ -10,7 +10,6 @@ import AddExpensePage from './pages/AddExpensePage';
 import ExpenseListPage from './pages/ExpenseListPage';
 import AnalyticsPage from './pages/AnalyticsPage';
 import ProfilePage from './pages/ProfilePage';
-import SettingsPage from './pages/SettingsPage';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -87,7 +86,6 @@ const AppRoutes = () => {
         <Route path="/edit-expense/:id" element={<AddExpensePage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
-        <Route path="/settings" element={<SettingsPage />} />
       </Route>
 
       {/* Fallback */}

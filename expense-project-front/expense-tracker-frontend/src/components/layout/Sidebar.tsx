@@ -5,9 +5,9 @@ import {
   PieChart,
   PlusCircle,
   User,
-  Settings,
   HelpCircle,
 } from 'lucide-react';
+
 
 const Sidebar = () => {
   const links = [
@@ -19,7 +19,6 @@ const Sidebar = () => {
 
   const bottomLinks = [
     { name: 'Profile', path: '/profile', icon: User },
-    { name: 'Settings', path: '/settings', icon: Settings },
     { name: 'Help', path: '/help', icon: HelpCircle },
   ];
 
