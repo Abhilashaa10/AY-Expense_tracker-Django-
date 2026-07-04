@@ -83,6 +83,7 @@ const AppRoutes = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/expenses" element={<ExpenseListPage />} />
         <Route path="/add-expense" element={<AddExpensePage />} />
+        <Route path="/edit-expense/:id" element={<AddExpensePage />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
       </Route>
