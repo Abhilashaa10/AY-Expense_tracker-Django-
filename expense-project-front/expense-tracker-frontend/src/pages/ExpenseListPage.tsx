@@ -72,9 +72,7 @@ const ExpenseListPage = () => {
     setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
   };
 
-  const totalAmount = expenses.reduce((sum, e) => sum + (e.type === 'expense' ? -e.amount : e.amount), 0);
-
-  return (
+const totalAmount = expenses.reduce((sum, e) => sum + Number(e.amount), 0);  return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -83,10 +81,9 @@ const ExpenseListPage = () => {
           <p className="text-gray-600 mt-1">
             {expenses.length} transactions found
             {expenses.length > 0 && (
-              <span className={`ml-2 ${totalAmount >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                (${Math.abs(totalAmount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                {totalAmount >= 0 ? ' income' : ' expense'})
-              </span>
+              <span className="ml-2 text-gray-600">
+  (Total: ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2 })})
+</span>
             )}
           </p>
         </div>
@@ -216,8 +213,8 @@ const ExpenseListPage = () => {
                     <tr key={expense.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
                         <div className="font-medium text-gray-900">{expense.title}</div>
-                        {expense.notes && (
-                          <div className="text-sm text-gray-500">{expense.notes}</div>
+                        {expense.note && (
+                          <div className="text-sm text-gray-500">{expense.note}</div>
                         )}
                       </td>
                       <td className="px-6 py-4">

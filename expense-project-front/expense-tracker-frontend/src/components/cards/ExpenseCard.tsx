@@ -1,5 +1,5 @@
 import { Expense } from '../../types';
-import { Edit2, Trash2, TrendingUp, TrendingDown } from 'lucide-react';
+import { Edit2, Trash2, TrendingDown } from 'lucide-react';
 import { categories } from '../../services/categoryService';
 
 interface ExpenseCardProps {
@@ -10,21 +10,16 @@ interface ExpenseCardProps {
 
 const ExpenseCard = ({ expense, onEdit, onDelete }: ExpenseCardProps) => {
   const category = categories.find((c) => c.name === expense.category);
-  const isIncome = expense.type === 'income';
 
   return (
     <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <div
-            className={`w-12 h-12 rounded-xl flex items-center justify-center`}
-            style={{ backgroundColor: category?.color + '15' || '#6B728015' }}
+            className="w-12 h-12 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: (category?.color ?? '#6B7280') + '15' }}
           >
-            {isIncome ? (
-              <TrendingUp className="w-6 h-6" style={{ color: category?.color || '#6B7280' }} />
-            ) : (
-              <TrendingDown className="w-6 h-6" style={{ color: category?.color || '#6B7280' }} />
-            )}
+            <TrendingDown className="w-6 h-6" style={{ color: category?.color ?? '#6B7280' }} />
           </div>
           <div>
             <h3 className="font-medium text-gray-900">{expense.title}</h3>
@@ -32,11 +27,11 @@ const ExpenseCard = ({ expense, onEdit, onDelete }: ExpenseCardProps) => {
               <span
                 className="px-2 py-0.5 rounded-full text-xs font-medium"
                 style={{
-                  backgroundColor: category?.color + '20' || '#6B728020',
-                  color: category?.color || '#6B7280',
+                  backgroundColor: (category?.color ?? '#6B7280') + '20',
+                  color: category?.color ?? '#6B7280',
                 }}
               >
-                {expense.category}
+                {category?.label ?? expense.category}
               </span>
               <span>{new Date(expense.date).toLocaleDateString()}</span>
             </div>
@@ -44,10 +39,9 @@ const ExpenseCard = ({ expense, onEdit, onDelete }: ExpenseCardProps) => {
         </div>
 
         <div className="flex items-center space-x-4">
-          <p className={`text-lg font-bold ${isIncome ? 'text-emerald-600' : 'text-gray-900'}`}>
-            {isIncome ? '+' : '-'}${expense.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          <p className="text-lg font-bold text-gray-900">
+            ${Number(expense.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
           </p>
-
           <div className="flex items-center space-x-1">
             <button
               onClick={() => onEdit?.(expense)}
@@ -65,9 +59,9 @@ const ExpenseCard = ({ expense, onEdit, onDelete }: ExpenseCardProps) => {
         </div>
       </div>
 
-      {expense.notes && (
+      {expense.note && (
         <p className="mt-3 text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2">
-          {expense.notes}
+          {expense.note}
         </p>
       )}
     </div>
