@@ -9,6 +9,7 @@ import Modal, { ConfirmModal } from '../components/common/Modal';
 import expenseService from '../services/expenseService';
 import { categories } from '../services/categoryService';
 import { Expense } from '../types';
+import { formatINR } from '../utils/format';
 
 const ExpenseListPage = () => {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -236,9 +237,8 @@ const totalAmount = expenses.reduce((sum, e) => sum + Number(e.amount), 0);  ret
                           expense.type === 'income' ? 'text-emerald-600' : 'text-gray-900'
                         }`}
                       >
-                        {expense.type === 'income' ? '+' : '-'}$
-                        {expense.amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </td>
+                        {formatINR(expense.amount)}
+(Total: {formatINR(totalAmount)})                      </td>
                       <td className="px-6 py-4 text-right">
                         <button
                           className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors mr-1"

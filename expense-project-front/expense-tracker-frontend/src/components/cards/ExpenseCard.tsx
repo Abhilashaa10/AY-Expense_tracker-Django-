@@ -1,6 +1,7 @@
 import { Expense } from '../../types';
 import { Edit2, Trash2, TrendingDown } from 'lucide-react';
 import { categories } from '../../services/categoryService';
+import { formatINR } from '../../utils/format';
 
 interface ExpenseCardProps {
   expense: Expense;
@@ -40,8 +41,7 @@ const ExpenseCard = ({ expense, onEdit, onDelete }: ExpenseCardProps) => {
 
         <div className="flex items-center space-x-4">
           <p className="text-lg font-bold text-gray-900">
-            ${Number(expense.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </p>
+{formatINR(expense.amount)}          </p>
           <div className="flex items-center space-x-1">
             <button
               onClick={() => onEdit?.(expense)}

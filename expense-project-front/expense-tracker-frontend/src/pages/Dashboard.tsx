@@ -13,6 +13,7 @@ import ExpenseCard from '../components/cards/ExpenseCard';
 import Button from '../components/common/Button';
 import expenseService from '../services/expenseService';
 import { Expense, DashboardStats } from '../types';
+import { formatINR } from '../utils/format';
 
 const Dashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
@@ -68,37 +69,37 @@ const Dashboard = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatisticCard
-          title="Total Balance"
-          value={`₹${(stats?.totalBalance || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
-          icon={Wallet}
-          iconColor="text-blue-600"
-          iconBgColor="bg-blue-50"
-          trend={{ value: 12.5, isPositive: true }}
-        />
+  title="Total Balance"
+  value={formatINR(stats?.totalBalance || 0)}
+  icon={Wallet}
+  iconColor="text-blue-600"
+  iconBgColor="bg-blue-50"
+  trend={{ value: 12.5, isPositive: true }}
+/>
         <StatisticCard
-          title="Total Income"
-          value={`₹${(stats?.totalIncome || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
-          icon={TrendingUp}
-          iconColor="text-emerald-600"
-          iconBgColor="bg-emerald-50"
-          trend={{ value: 8.2, isPositive: true }}
-        />
+  title="Total Income"
+  value={formatINR(stats?.totalBalance || 0)}
+  icon={Wallet}
+  iconColor="text-blue-600"
+  iconBgColor="bg-blue-50"
+  trend={{ value: 12.5, isPositive: true }}
+/>
         <StatisticCard
-          title="Total Expense"
-          value={`₹${(stats?.totalExpense || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
-          icon={TrendingDown}
-          iconColor="text-red-600"
-          iconBgColor="bg-red-50"
-          trend={{ value: 3.1, isPositive: false }}
-        />
+  title="Total Expense"
+  value={formatINR(stats?.totalBalance || 0)}
+  icon={Wallet}
+  iconColor="text-blue-600"
+  iconBgColor="bg-blue-50"
+  trend={{ value: 12.5, isPositive: true }}
+/>
         <StatisticCard
-          title="Monthly Savings"
-          value={`₹${(stats?.monthlySavings || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}`}
-          icon={PiggyBank}
-          iconColor="text-purple-600"
-          iconBgColor="bg-purple-50"
-          trend={{ value: 15.3, isPositive: true }}
-        />
+  title="Monthly saving"
+  value={formatINR(stats?.totalBalance || 0)}
+  icon={Wallet}
+  iconColor="text-blue-600"
+  iconBgColor="bg-blue-50"
+  trend={{ value: 12.5, isPositive: true }}
+/>
       </div>
 
       {/* Recent Transactions List */}
