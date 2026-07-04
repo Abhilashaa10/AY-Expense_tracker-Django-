@@ -42,6 +42,7 @@ googleapis-common-protos==1.75.0
 greenlet==3.5.1
 grpcio==1.81.1
 grpcio-status==1.71.2
+gunicorn==26.0.0
 h11==0.16.0
 h2==4.3.0
 hpack==4.1.0
@@ -124,5 +125,6 @@ uvicorn==0.40.0
 watchfiles==1.1.1
 websockets==15.0.1
 Werkzeug==3.1.5
+whitenoise==6.12.0
 yarl==1.24.2
 zope.interface==8.2
