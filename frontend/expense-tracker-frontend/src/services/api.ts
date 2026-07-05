@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api';
+const API_BASE_URL =  'https://av-expense-tracker-obc0.onrender.com/api';;
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -13,7 +13,7 @@ api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
     if (token) {
-      config.headers.Authorization = `Token ${token}`;  // 👈 changed from Bearer to Token
+      config.headers.Authorization = `Token ${token}`;  
     }
     return config;
   },
