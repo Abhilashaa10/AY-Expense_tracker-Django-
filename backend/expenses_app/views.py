@@ -113,9 +113,12 @@ Be friendly, concise, and use ₹ for currency.
 
     # Configure Gemini
     genai.configure(api_key=os.environ.get('GEMINI_API_KEY'))
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-3.8-flash')
     
-    response = model.generate_content(f"{context}\n\nUser: {user_message}")
+    response = model.generate_content(
+        f"{context}\n\nUser: {user_message}"
+        )
+
     reply = response.text.strip()
     
     # Check if Gemini wants to add an expense
