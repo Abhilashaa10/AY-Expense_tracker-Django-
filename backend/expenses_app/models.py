@@ -8,6 +8,7 @@ class Expense(models.Model):
         ('rent', 'Rent'),
         ('utilities', 'Utilities'),
         ('entertainment', 'Entertainment'),
+        ('shopping', 'Shopping'),
         ('other', 'Other'),
     ]
 

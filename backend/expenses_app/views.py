@@ -1,13 +1,21 @@
+
+import json
+import os
+import time
+
+from google import genai
+from google.genai import types
+
+from django.db.models import Sum
+from django.shortcuts import get_object_or_404
+
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import get_object_or_404
+
 from .models import Expense
-from django.db.models import Sum
 from .serializers import ExpenseSerializer, RegisterSerializer
-
-
 @api_view(['GET', 'POST'])
 def expense_list(request):
     if request.method == 'GET':
@@ -63,235 +71,138 @@ def register(request):
 
 
 
-from google import genai
-import json
-import os
-from datetime import date
-
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def expense_agent(request):
-    user_message = request.data.get('message', '')
+    user_message = request.data.get('message', '').strip()
 
-    # 1. TOTAL SPENDING
+    if not user_message:
+        return Response(
+            {'reply': 'Please enter a message.'},
+            status=400
+        )
 
-    total_spent = Expense.objects.filter(
-        user=request.user
-    ).aggregate(
-        total=Sum('amount')
-    )['total'] or 0
+    def query_expenses(category: str = "", year: int = 0, month: int = 0) -> dict:
+        """Query the authenticated user's expenses."""
 
-    # 2. SPENDING BY CATEGORY
+        expenses = Expense.objects.filter(user=request.user)
 
-    category_totals = Expense.objects.filter(
-        user=request.user
-    ).values(
-        'category'
-    ).annotate(
-        total=Sum('amount')
-    ).order_by('-total')
+        valid_categories = [
+            "food", "transport", "rent",
+            "utilities", "entertainment","shopping", "other"
+        ]
 
-    category_totals = list(category_totals)
+        if category:
+            category = category.lower().strip()
 
-    # 3. SPENDING BY YEAR
+            if category not in valid_categories:
+                return {"error": "Invalid expense category."}
 
-    year_totals = Expense.objects.filter(
-        user=request.user
-    ).values(
-        'date__year'
-    ).annotate(
-        total=Sum('amount')
-    ).order_by('date__year')
+            expenses = expenses.filter(category=category)
 
-    year_totals = list(year_totals)
+        if year:
+            if year < 2000 or year > 9999:
+                return {"error": "Invalid year."}
+            expenses = expenses.filter(date__year=year)
 
-    # 4. SPENDING BY MONTH
+        if month:
+            if month < 1 or month > 12:
+                return {"error": "Invalid month."}
+            expenses = expenses.filter(date__month=month)
 
-    month_totals = Expense.objects.filter(
-        user=request.user
-    ).values(
-        'date__year',
-        'date__month'
-    ).annotate(
-        total=Sum('amount')
-    ).order_by(
-        'date__year',
-        'date__month'
-    )
+        total = expenses.aggregate(total=Sum("amount"))["total"] or 0
 
-    month_totals = list(month_totals)
-
-    # 5. SPENDING BY YEAR + CATEGORY
-
-    year_category_totals = Expense.objects.filter(
-        user=request.user
-    ).values(
-        'date__year',
-        'category'
-    ).annotate(
-        total=Sum('amount')
-    ).order_by(
-        'date__year',
-        'category'
-    )
-
-    year_category_totals = list(year_category_totals)
-
-    # 6. TOP 10 BIGGEST EXPENSES
-
-    top_expenses = Expense.objects.filter(
-        user=request.user
-    ).order_by('-amount')[:10]
-
-    top_expenses_data = ExpenseSerializer(
-        top_expenses,
-        many=True
-    ).data
-
-    # 7. NUMBER OF EXPENSES
-
-    expense_count = Expense.objects.filter(
-        user=request.user
-    ).count()
-
-    # 8. PRINT RESULTS
-
-    print("TOTAL SPENT:", total_spent)
-    print("CATEGORY TOTALS:", category_totals)
-    print("YEAR TOTALS:", year_totals)
-    print("MONTH TOTALS:", month_totals)
-    print("YEAR + CATEGORY TOTALS:", year_category_totals)
-    print("TOP EXPENSES:", top_expenses_data)
-    print("EXPENSE COUNT:", expense_count)
-
-    # 9. BUILD CONTEXT FOR GEMINI
-
-    context = f"""
-You are a personal finance AI assistant.
-
-The exact calculations below were done by Django from the database.
-
-Use these numbers as the source of truth.
-Do not calculate totals yourself.
-
-TOTAL SPENDING:
-₹{total_spent}
-
-NUMBER OF EXPENSES:
-{expense_count}
-
-SPENDING BY CATEGORY:
-{json.dumps(
-    [
-        {
-            'category': item['category'],
-            'total': float(item['total'])
+        return {
+            "category": category or "all",
+            "year": year or "all",
+            "month": month or "all",
+            "total_spent": str(total),
+            "expense_count": expenses.count()
         }
-        for item in category_totals
-    ],
-    indent=2
-)}
 
-SPENDING BY YEAR:
-{json.dumps(
-    [
-        {
-            'year': item['date__year'],
-            'total': float(item['total'])
-        }
-        for item in year_totals
-    ],
-    indent=2
-)}
-
-SPENDING BY MONTH:
-{json.dumps(
-    [
-        {
-            'year': item['date__year'],
-            'month': item['date__month'],
-            'total': float(item['total'])
-        }
-        for item in month_totals
-    ],
-    indent=2
-)}
-
-SPENDING BY YEAR AND CATEGORY:
-{json.dumps(
-    [
-        {
-            'year': item['date__year'],
-            'category': item['category'],
-            'total': float(item['total'])
-        }
-        for item in year_category_totals
-    ],
-    indent=2
-)}
-
-TOP 10 BIGGEST EXPENSES:
-{json.dumps(top_expenses_data, indent=2)}
-
-You can answer questions about:
-
-- Total spending
-- Category spending
-- Yearly spending
-- Monthly spending
-- Spending by year and category
-- Biggest expenses
-- Number of expenses
-- Spending comparisons
-- Financial patterns
-- Simple financial advice
-
-When answering questions about the biggest expenses,
-use the TOP 10 BIGGEST EXPENSES data above.
-
-When answering questions about totals,
-use the exact Django calculations above.
-
-Do not say that you cannot see individual expenses,
-because the TOP 10 BIGGEST EXPENSES data is provided.
-
-When adding an expense, respond with:
-
-<ADD_EXPENSE>
-{{"title": "...", "amount": 0, "category": "...", "date": "...", "note": ""}}
-</ADD_EXPENSE>
-
-For normal questions, answer in 2-3 simple sentences.
-
-Use ₹ for currency.
-"""
-
-    # 10. CONFIGURE GEMINI
     client = genai.Client(
         api_key=os.environ.get('GEMINI_API_KEY')
     )
 
-    # 11. SEND REQUEST TO GEMINI
+    system_instruction = """
 
-    import time
+You are an AI assistant for a personal expense tracker.
+
+For questions about expense totals, categories, years, or months,
+use the query_expenses tool. Never invent totals.
+The database is the source of truth.
+
+Valid categories:
+food, transport, rent, utilities, entertainment, shopping, other.
+
+Categorize expenses based on the actual item or service:
+- Shoes, clothes, bags, watches, and other retail purchases -> shopping
+- Groceries, vegetables, fruits, and food items -> food
+- Bus, train, taxi, fuel, and other travel costs -> transport
+- House rent -> rent
+- Electricity, water, internet, and gas bills -> utilities
+- Movies, concerts, and recreational activities -> entertainment
+- Use other only when no category fits.
+
+DATE RULES:
+- Never invent a date, month, or year.
+- If the user provides a complete date, use that date.
+- If the user provides only a year, preserve that year.
+- If the date is incomplete, ask the user for the missing information.
+- Never use a default date such as January 1.
+- Never save an expense until the required date information is clear.
+
+AMOUNT RULES:
+- Extract the amount exactly as the user intended.
+- If the amount is ambiguous, ask the user to clarify.
+
+For a request to add an expense, use this format only
+after all required information is clear:
+
+<ADD_EXPENSE>
+{"title": "Shoes", "amount": 2200, "category": "shopping", "date": "2026-10-09", "note": ""}
+</ADD_EXPENSE>
+
+The example above is only a format example. Never copy its values
+unless they match the user's request.
+
+Never claim an expense was saved unless Django confirms it.
+Keep replies concise and use ₹ for Indian currency.
+"""
 
     start_time = time.time()
 
-    response = client.models.generate_content(
-        model='gemini-3.5-flash-lite',
-        contents=f"{context}\n\nUser: {user_message}"
-    )
+    try:
+        chat = client.chats.create(
+            model='gemini-3.5-flash-lite',
+            config=types.GenerateContentConfig(
+                system_instruction=system_instruction,
+                tools=[query_expenses]
+            )
+        )
 
-    end_time = time.time()
+        start_time = time.time()
+        response = chat.send_message(user_message)
+        end_time = time.time()
 
-    print(
-        "Gemini response time:",
-        end_time - start_time,
-        "seconds"
-    )
+        print(
+            "Gemini response time:",
+            round(end_time - start_time, 2),
+            "seconds"
+        )
 
-    reply = response.text.strip()
+        reply = (response.text or "").strip()
+        print("AGENT REPLY:", reply)
 
-    # 12. CHECK IF GEMINI WANTS TO ADD EXPENSE
+    except Exception as e:
+        print("GEMINI ERROR:", e)
+        return Response(
+            {
+                'reply': 'Sorry, I could not process your request. Please try again.'
+            },
+            status=500
+        )
+        
 
     if '<ADD_EXPENSE>' in reply:
         try:
@@ -301,16 +212,10 @@ Use ₹ for currency.
             expense_json = reply[start:end].strip()
             expense_data = json.loads(expense_json)
 
-            # 13. SAVE NEW EXPENSE
-
-            serializer = ExpenseSerializer(
-                data=expense_data
-            )
+            serializer = ExpenseSerializer(data=expense_data)
 
             if serializer.is_valid():
-                serializer.save(
-                    user=request.user
-                )
+                serializer.save(user=request.user)
 
                 return Response({
                     'reply': (
@@ -322,18 +227,15 @@ Use ₹ for currency.
                     'expense': serializer.data
                 })
 
+            return Response({
+                'reply': 'I could not add that expense. Please check the details.',
+                'errors': serializer.errors
+            }, status=400)
+
         except Exception as e:
             print("ADD EXPENSE ERROR:", e)
-
             return Response({
-                'reply': (
-                    'I understood you want to add an expense '
-                    'but had trouble parsing it. Could you try again?'
-                )
-            })
+                'reply': 'I could not process that expense. Please try again.'
+            }, status=400)
 
-    # 14. NORMAL RESPONSE
-
-    return Response({
-        'reply': reply
-    })
+    return Response({'reply': reply})
